@@ -234,6 +234,9 @@ void epic_studies(const char* fileList){
     // status = 4 is the beam (ref 1767) in HepMC
     // status = 1 stable particle in the final state
 
+    TLorentzVector ElectronScattered;
+    TLorentzVector ElectronScattered_mc;
+
     //------------- Loop over events
     while(tree_reader.Next()) {
 
@@ -248,8 +251,6 @@ void epic_studies(const char* fileList){
         double pz_p = 275.0;
         double p_p = std::abs(pz_p);
         double E_p = sqrt(p_p*p_p + m_p*m_p);
-        TLorentzVector ElectronScattered;
-        TLorentzVector ElectronScattered_mc;
         TLorentzVector ProtonScattered;
         TLorentzVector ProtonScattered_mc;
         TLorentzVector ElectronBeam(0., 0., pz_e, E_e);
