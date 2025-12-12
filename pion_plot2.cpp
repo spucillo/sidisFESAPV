@@ -1,3 +1,4 @@
+//--- Authors: Lorenzo Polizzi (lorenzo.polizzi@unife.it), Sara Pucillo (sara.pucillo@cern.ch), Nicolò Valle (nicolo.valle@cern.ch)
 #include <cstdlib>
 #include <iostream>
 #include <chrono>
@@ -166,6 +167,7 @@ void pion_plot2() {
     // Variables
     // elettrone
     double electron_px, electron_py, electron_pz, electron_mom, electron_Theta, electron_Phi, electron_ThetaDeg, electron_E, electron_W, electron_Q2, electron_ass;
+    double electron_eta, electron_y;
     // pione +
     double pionp_mom, pionp_Q2, pionp_xB, pionp_xF, pionp_z, pionp_PhT, pionp_Phi_h, pionp_Phi_s, pionp_Phi_lab, pionp_Theta, pionp_eta, pionp_y, pionp_W, pionp_Mx;
     double helicity, eps, pionp_px, pionp_py, pionp_pz, el_px, el_py, el_pz, el_theta, el_phi, el_eta, el_mom, pr_mom, pr_px, pr_py, pr_pz, pr_phi, pr_theta, pr_eta;
@@ -176,31 +178,29 @@ void pion_plot2() {
     double pionp_mom_mc, pionp_Q2_mc, pionp_xB_mc, pionp_xF_mc, pionp_z_mc, pionp_PhT_mc;
     double pionp_Phi_h_mc, pionp_Phi_s_mc, pionp_Phi_lab_mc, pionp_Theta_mc, pionp_eta_mc, pionp_y_mc, pionp_W_mc, pionp_Mx_mc;
     double hel_mc, eps_mc, pionp_px_mc, pionp_py_mc, pionp_pz_mc;
-    int pionp_mc_index, index_mc;
+    double pionp_mc_index, index_mc;
     // 
     double pionp_mom_all, pionp_Q2_all, pionp_xB_all, pionp_xF_all, pionp_z_all, pionp_PhT_all;
     double pionp_Phi_h_all, pionp_Phi_s_all, pionp_Phi_lab_all, pionp_Theta_all, pionp_eta_all, pionp_y_all, pionp_W_all, pionp_Mx_all;
     double hel_all, eps_all, pionp_px_all, pionp_py_all, pionp_pz_all;
     double good_PID_all, pdg_all;
-    int pionp_all_index, index_all;
+    double pionp_all_index, index_all;
 
     // input file
-    string inputDir = "25.10_10x100_pion";
+    string inputDir = "25.10_10x100_kaon";
     
     TTree treePionP("Pion+", "");
     TTree treePionP_MC("MC Pion+", "");
     TChain chainElectron("Electron");
-    TChain chainPionP("Pion+");
-    TChain chainPionP_MC("MC Pion+");
-    TChain chainPionP_all("All Pion+");
+    TChain chainHadron_Reco("Hadron Reco");
+    TChain chainHadron_MC("Hadron MC");
     int fileCount = 0;
     for (const auto &entry : fs::directory_iterator(inputDir)) {
         if (entry.path().extension() == ".root") {
             string filePath = entry.path().string();
-            chainElectron.Add(Form("%s/Pion_Electron_Assoc", filePath.c_str()));
-            chainPionP.Add(Form("%s/PionTree", filePath.c_str()));
-            chainPionP_MC.Add(Form("%s/PionTree_mc", filePath.c_str()));
-            chainPionP_all.Add(Form("%s/PionTree_AllReco", filePath.c_str()));
+            chainElectron.Add(Form("%s/ElectronTree_MC", filePath.c_str()));
+            chainHadron_MC.Add(Form("%s/HadronTree_MC", filePath.c_str()));
+            chainHadron_Reco.Add(Form("%s/HadronTree_RECO", filePath.c_str()));
             fileCount++;
         }
     }
@@ -209,85 +209,64 @@ void pion_plot2() {
         return;
     }
     // creo un output root 
-    const char* outputFile  = "plot_2510_epic_pion.root"; 
+    const char* outputFile  = "new_plot_2510_epic_pion.root"; 
     TFile outFile(outputFile, "RECREATE");  // File di output ROOT
 
     // To save all the variables
     // here we collect all the variables from the ttree
     // Electron
-    chainElectron.SetBranchAddress("el_ass_px", &electron_px);
-    chainElectron.SetBranchAddress("el_ass_py", &electron_py);
-    chainElectron.SetBranchAddress("el_ass_pz", &electron_pz);
-    chainElectron.SetBranchAddress("el_ass_mom", &electron_mom);
-    //chainElectron.SetBranchAddress("vz", &electron_vz);
-    //chainElectron.SetBranchAddress("Q2", &electron_Q2);
-    //chainElectron.SetBranchAddress("W", &electron_W);
-    chainElectron.SetBranchAddress("el_ass_theta", &electron_Theta);
-    chainElectron.SetBranchAddress("el_ass_phi", &electron_Phi);
+    chainElectron.SetBranchAddress("el_px_mc", &electron_px);
+    chainElectron.SetBranchAddress("el_py_mc", &electron_py);
+    chainElectron.SetBranchAddress("el_pz_mc", &electron_pz);
+    chainElectron.SetBranchAddress("el_mom_mc", &electron_mom);
+    chainElectron.SetBranchAddress("el_theta_mc", &electron_Theta);
+    chainElectron.SetBranchAddress("el_phi_mc", &electron_Phi);
+    chainElectron.SetBranchAddress("el_eta_mc", &electron_eta);
+    chainElectron.SetBranchAddress("el_y_mc", &electron_y);
     // Pion +
-    //chainPionP.SetBranchAddress("E", &pionp_E);
-    chainPionP.SetBranchAddress("mc_index", &pionp_mc_index);
-    chainPionP.SetBranchAddress("rec_pdg", &rec_pdg);
-    chainPionP.SetBranchAddress("good_PID", &good_PID);
-    chainPionP.SetBranchAddress("pion_px", &pionp_px);
-    chainPionP.SetBranchAddress("pion_py", &pionp_py);
-    chainPionP.SetBranchAddress("pion_pz", &pionp_pz);
-    chainPionP.SetBranchAddress("Mom", &pionp_mom);
-    //chainPionP.SetBranchAddress("Beta", &pionp_beta);
-    chainPionP.SetBranchAddress("W", &pionp_W);
-    //chainPionP.SetBranchAddress("vz", &pionp_vz);
-    chainPionP.SetBranchAddress("Q2", &pionp_Q2);
-    chainPionP.SetBranchAddress("xF", &pionp_xF);
-    chainPionP.SetBranchAddress("xB", &pionp_xB);
-    chainPionP.SetBranchAddress("y", &pionp_y);
-    chainPionP.SetBranchAddress("z", &pionp_z);
-    chainPionP.SetBranchAddress("PhT", &pionp_PhT);
-    chainPionP.SetBranchAddress("Phi_lab", &pionp_Phi_lab);
-    chainPionP.SetBranchAddress("theta", &pionp_Theta);
-    chainPionP.SetBranchAddress("eta", &pionp_eta);
-    chainPionP.SetBranchAddress("Phi_h", &pionp_Phi_h);
-    chainPionP.SetBranchAddress("Phi_s", &pionp_Phi_s);
-    //chainPionP.SetBranchAddress("SinPhi", &pionp_SinPhi);
-    chainPionP.SetBranchAddress("helicity", &helicity);
-    chainPionP.SetBranchAddress("Mx", &pionp_Mx);
+    chainHadron_Reco.SetBranchAddress("hadron_index", &pionp_mc_index);
+    chainHadron_Reco.SetBranchAddress("hadron_pdg", &rec_pdg);
+    chainHadron_Reco.SetBranchAddress("hadron_good_PID", &good_PID);
+    chainHadron_Reco.SetBranchAddress("hadron_px", &pionp_px);
+    chainHadron_Reco.SetBranchAddress("hadron_py", &pionp_py);
+    chainHadron_Reco.SetBranchAddress("hadron_pz", &pionp_pz);
+    chainHadron_Reco.SetBranchAddress("hadron_mom", &pionp_mom);
+    //chainHadron_Reco.SetBranchAddress("W", &pionp_W);
+    chainHadron_Reco.SetBranchAddress("hadron_Q2", &pionp_Q2);
+    //chainHadron_Reco.SetBranchAddress("hadron_xF", &pionp_xF);
+    chainHadron_Reco.SetBranchAddress("hadron_xB", &pionp_xB);
+    chainHadron_Reco.SetBranchAddress("hadron_y", &pionp_y);
+    chainHadron_Reco.SetBranchAddress("hadron_z", &pionp_z);
+    chainHadron_Reco.SetBranchAddress("hadron_PhT", &pionp_PhT);
+    chainHadron_Reco.SetBranchAddress("hadron_Phi_lab", &pionp_Phi_lab);
+    chainHadron_Reco.SetBranchAddress("hadron_Theta", &pionp_Theta);
+    chainHadron_Reco.SetBranchAddress("hadron_eta", &pionp_eta);
+    chainHadron_Reco.SetBranchAddress("hadron_Phi_h", &pionp_Phi_h);
+    //chainHadron_Reco.SetBranchAddress("Phi_s", &pionp_Phi_s);
+    //chainHadron_Reco.SetBranchAddress("helicity", &helicity);
+    //chainHadron_Reco.SetBranchAddress("hadron_Mx", &pionp_Mx);
     //
     // PionMC +
-    chainPionP_MC.SetBranchAddress("index", &index_mc);
-    chainPionP_MC.SetBranchAddress("Mom_mc", &pionp_mom_mc);
-    chainPionP_MC.SetBranchAddress("Q2_mc", &pionp_Q2_mc);
-    chainPionP_MC.SetBranchAddress("xB_mc", &pionp_xB_mc);
-    chainPionP_MC.SetBranchAddress("xF_mc", &pionp_xF_mc);
-    chainPionP_MC.SetBranchAddress("z_mc", &pionp_z_mc);
-    chainPionP_MC.SetBranchAddress("PhT_mc", &pionp_PhT_mc);
-    chainPionP_MC.SetBranchAddress("Phi_lab_mc", &pionp_Phi_lab_mc);
-    chainPionP_MC.SetBranchAddress("Phi_h_mc", &pionp_Phi_h_mc);
-    chainPionP_MC.SetBranchAddress("Phi_s_mc", &pionp_Phi_s_mc);
-    chainPionP_MC.SetBranchAddress("theta_mc", &pionp_Theta_mc);
-    chainPionP_MC.SetBranchAddress("eta_mc", &pionp_eta_mc);
-    chainPionP_MC.SetBranchAddress("y_mc", &pionp_y_mc);
-    chainPionP_MC.SetBranchAddress("W_mc", &pionp_W_mc);
-    chainPionP_MC.SetBranchAddress("Mx_mc", &pionp_Mx_mc);
-    chainPionP_MC.SetBranchAddress("helicity_mc", &hel_mc);
-    chainPionP_MC.SetBranchAddress("epsilon_mc", &eps_mc);
-    chainPionP_MC.SetBranchAddress("pion_px_mc", &pionp_px_mc);
-    chainPionP_MC.SetBranchAddress("pion_py_mc", &pionp_py_mc);
-    chainPionP_MC.SetBranchAddress("pion_pz_mc", &pionp_pz_mc);
-    // all
-    chainPionP_all.SetBranchAddress("index", &index_all);
-    chainPionP_all.SetBranchAddress("goodPID", &good_PID_all);
-    chainPionP_all.SetBranchAddress("pdg", &pdg_all);
-    chainPionP_all.SetBranchAddress("Q2", &pionp_Q2_all);
-    chainPionP_all.SetBranchAddress("xB", &pionp_xB_all);
-    chainPionP_all.SetBranchAddress("Mom", &pionp_mom_all);
-    chainPionP_all.SetBranchAddress("z", &pionp_z_all);
-    chainPionP_all.SetBranchAddress("PhT", &pionp_PhT_all);
-    chainPionP_all.SetBranchAddress("Phi_lab", &pionp_Phi_lab_all);
-    chainPionP_all.SetBranchAddress("theta", &pionp_Theta_all);
-    chainPionP_all.SetBranchAddress("eta", &pionp_eta_all);
-    chainPionP_all.SetBranchAddress("y", &pionp_y_all);
-    chainPionP_all.SetBranchAddress("pion_px", &pionp_px_all);
-    chainPionP_all.SetBranchAddress("pion_py", &pionp_py_all);
-    chainPionP_all.SetBranchAddress("pion_pz", &pionp_pz_all);
+    chainHadron_MC.SetBranchAddress("hadron_index", &index_mc);
+    chainHadron_MC.SetBranchAddress("hadron_mom_mc", &pionp_mom_mc);
+    chainHadron_MC.SetBranchAddress("hadron_Q2_mc", &pionp_Q2_mc);
+    chainHadron_MC.SetBranchAddress("hadron_xB_mc", &pionp_xB_mc);
+    //chainHadron_MC.SetBranchAddress("hadron_xF_mc", &pionp_xF_mc);
+    chainHadron_MC.SetBranchAddress("hadron_z_mc", &pionp_z_mc);
+    chainHadron_MC.SetBranchAddress("hadron_PhT_mc", &pionp_PhT_mc);
+    chainHadron_MC.SetBranchAddress("hadron_Phi_lab_mc", &pionp_Phi_lab_mc);
+    chainHadron_MC.SetBranchAddress("hadron_Phi_h_mc", &pionp_Phi_h_mc);
+    //chainHadron_MC.SetBranchAddress("Phi_s_mc", &pionp_Phi_s_mc);
+    chainHadron_MC.SetBranchAddress("hadron_Theta_mc", &pionp_Theta_mc);
+    chainHadron_MC.SetBranchAddress("hadron_eta_mc", &pionp_eta_mc);
+    chainHadron_MC.SetBranchAddress("hadron_y_mc", &pionp_y_mc);
+    //chainHadron_MC.SetBranchAddress("hadron_W_mc", &pionp_W_mc);
+    //chainHadron_MC.SetBranchAddress("hadron_Mx_mc", &pionp_Mx_mc);
+    //chainHadron_MC.SetBranchAddress("helicity_mc", &hel_mc);
+    //chainHadron_MC.SetBranchAddress("hadron_epsilon_mc", &eps_mc);
+    chainHadron_MC.SetBranchAddress("hadron_px_mc", &pionp_px_mc);
+    chainHadron_MC.SetBranchAddress("hadron_py_mc", &pionp_py_mc);
+    chainHadron_MC.SetBranchAddress("hadron_pz_mc", &pionp_pz_mc);
     // tree
     // Pion +
     treePionP.Branch("mc_index", &pionp_mc_index, "mc_index/I");
@@ -474,12 +453,12 @@ void pion_plot2() {
 
     // ORA RIEMPI I GRAFICI
     // Pion+
-    Long64_t nEntries_pip = chainPionP.GetEntries();
-    Long64_t nEntries_pipMC = chainPionP_MC.GetEntries();
-    Long64_t nEntries_pipAll = chainPionP_all.GetEntries();
+    Long64_t nEntries_pip = chainHadron_Reco.GetEntries();
+    Long64_t nEntries_pipMC = chainHadron_MC.GetEntries();
     //
     for (Long64_t i = 0; i < nEntries_pipMC; i++) {
-        chainPionP_MC.GetEntry(i);
+        chainHadron_MC.GetEntry(i);
+        if (i % 100000 == 0) cout << "MC entry: " << i << "/" << nEntries_pipMC << endl;
         if(pionp_y_mc < 0.99 && pionp_y_mc >= 0.01){
             double bin_xQ2 = getBinIndex_xQ2(pionp_xB_mc, pionp_Q2_mc);
             double bin_zPt = getBinIndex_zPt(pionp_z_mc, pionp_PhT_mc);
@@ -497,6 +476,7 @@ void pion_plot2() {
         }
     }
     //
+    /*
     for (Long64_t i = 0; i < nEntries_pipAll; i++) {
         chainPionP_all.GetEntry(i);
         if(good_PID_all != 0) continue;
@@ -513,115 +493,119 @@ void pion_plot2() {
             //treePionP_all.Fill();
         }
     }
+        */
     //
     for (Long64_t i = 0; i < nEntries_pip; i++) {
-        chainPionP.GetEntry(i);
-        if(pionp_y < 0.99 && pionp_y >= 0.01){
-            double bin_xQ2 = getBinIndex_xQ2(pionp_xB, pionp_Q2);
-            double bin_zPt = getBinIndex_zPt(pionp_z, pionp_PhT);
-            //if(bin_xQ2 != 14) continue;
-            //
-            if(bin_xQ2 >= 0){
-                if(bin_zPt >= 0){
-                    pip_efficiency_xQ2_zPt_2[bin_xQ2-1][bin_zPt-1].push_back(pionp_y); // compenso il fatto che i bin partano da 1
+        chainHadron_Reco.GetEntry(i);
+        if (i % 100000 == 0) cout << "RECO entry: " << i << "/" << nEntries_pip << endl;
+        //if(rec_pdg == 211 && pionp_z < 1 && pionp_Q2 >= 1){
+            if(pionp_y < 0.99 && pionp_y >= 0.01){
+                double bin_xQ2 = getBinIndex_xQ2(pionp_xB, pionp_Q2);
+                double bin_zPt = getBinIndex_zPt(pionp_z, pionp_PhT);
+                //if(bin_xQ2 != 14) continue;
+                //
+                if(bin_xQ2 >= 0){
+                    if(bin_zPt >= 0){
+                        pip_efficiency_xQ2_zPt_2[bin_xQ2-1][bin_zPt-1].push_back(pionp_y); // compenso il fatto che i bin partano da 1
+                    }
                 }
             }
+            if(pionp_y < 0.99 && pionp_y >= 0.01 && good_PID == 0 && rec_pdg == 211 && pionp_z < 1 && pionp_Q2 >= 1){
+                double bin_xQ2 = getBinIndex_xQ2(pionp_xB, pionp_Q2);
+                double bin_zPt = getBinIndex_zPt(pionp_z, pionp_PhT);
+                double bin_z = getBinIndex_z(pionp_z);
+                double bin_Pt = getBinIndex_Pt(pionp_PhT);
+                //if(bin_xQ2 != 14) continue;
+                //
+                if(bin_xQ2 >= 0){
+                    if(bin_zPt >= 0){
+                        pip_efficiency_xQ2_zPt[bin_xQ2-1][bin_zPt-1].push_back(pionp_y); 
+                    }
+                }
+                //
+                // Mom
+                pip_MomVsPhT.Fill(pionp_PhT, pionp_mom);
+                pip_MomVsEta.Fill(pionp_eta, pionp_mom);
+                pip_MomVsMx.Fill(pionp_mom, pionp_Mx);
+                pip_MomVsPhi_h.Fill(pionp_Phi_h, pionp_mom);
+                pip_MomVsTheta.Fill(pionp_mom, pionp_Theta);
+                pip_MomVsXb.Fill(pionp_xB, pionp_mom);
+                pip_MomVsXf.Fill(pionp_xF, pionp_mom);
+                pip_MomVsY.Fill(pionp_y, pionp_mom);
+                pip_MomVsZ.Fill(pionp_z, pionp_mom);
+                // Q2
+                pip_Q2VsEta.Fill(pionp_eta, pionp_Q2);
+                pip_Q2VsMom.Fill(pionp_mom, pionp_Q2);
+                pip_Q2VsPhi_h.Fill(pionp_Phi_h, pionp_Q2);
+                pip_Q2VsPhT.Fill(pionp_PhT, pionp_Q2);
+                pip_Q2VsXb.Fill(pionp_xB, pionp_Q2);
+                pip_Q2VsXf.Fill(pionp_xF, pionp_Q2);
+                pip_Q2VsY.Fill(pionp_y, pionp_Q2);
+                pip_Q2VsZ.Fill(pionp_z, pionp_Q2);
+                // PhT
+                pip_PhTvsEta.Fill(pionp_eta, pionp_PhT);
+                pip_PhTvsXb.Fill(pionp_xB, pionp_PhT);
+                pip_PhTvsZ.Fill(pionp_z, pionp_PhT);
+                pip_PhTvsPhi_h.Fill(pionp_Phi_h, pionp_PhT);
+                // z
+                pip_zVsEta.Fill(pionp_eta, pionp_z);
+                pip_zVsPhi_h.Fill(pionp_Phi_h, pionp_z);
+                pip_zVsXb.Fill(pionp_xB, pionp_z);
+                pip_zVsXf.Fill(pionp_xF, pionp_z);
+                //
+                pip_xBvsY.Fill(pionp_xB, pionp_y);
+                pip_ThetaVsPhi_h.Fill(pionp_Phi_h, pionp_Theta);
+                pip_ThetaVsPhi_Lab.Fill(pionp_Phi_lab, pionp_Theta);
+                treePionP.Fill();
+            }
+
         }
-        if(pionp_y < 0.99 && pionp_y >= 0.01 && good_PID == 0 && rec_pdg == 211){
-            double bin_xQ2 = getBinIndex_xQ2(pionp_xB, pionp_Q2);
-            double bin_zPt = getBinIndex_zPt(pionp_z, pionp_PhT);
-            double bin_z = getBinIndex_z(pionp_z);
-            double bin_Pt = getBinIndex_Pt(pionp_PhT);
-            //if(bin_xQ2 != 14) continue;
-            //
-            if(bin_xQ2 >= 0){
-                if(bin_zPt >= 0){
-                    pip_efficiency_xQ2_zPt[bin_xQ2-1][bin_zPt-1].push_back(pionp_y); 
+
+        treePionP.Write();
+        treePionP_MC.Write();
+
+        for (int ix = 0; ix < nBin_xQ2; ix++) {
+            for (int iz = 0; iz < nBin_zPt; iz++) {
+                double n = pip_efficiency_xQ2_zPt[ix][iz].size();
+                double n_mc = pip_efficiency_xQ2_zPt_mc[ix][iz].size();
+                double n2 = pip_efficiency_xQ2_zPt_2[ix][iz].size();
+                double n_all = pip_purity_xQ2_zPt_num[ix][iz].size();
+                double n_all_den = pip_purity_xQ2_zPt_den[ix][iz].size();
+                //double eff = (n > 0) ? 1.0 / sqrt(n) : 0.0;
+                double eff = (n > 0 || n2 > 0) ? n/n2 : 0.0;
+                double err = (n_mc > 0) ? sqrt(eff * (1.0 - eff) / n_mc) : 0.0;
+                double purity = (n > 0 || n_all > 0) ? n/n_all_den : 0.0;
+                //if(n < 300) eff = 0;
+                //hist_efficiency_xQ2_zPt[ix]->SetBinError(..., err);
+                if (eff >= 1){
+                    //cout << "eff > 1 in bin xQ2: " << ix+1 << " and bin zPt: " << iz+1 << ". Eff = " << eff << endl;
+                    eff = 1.0;
+                }
+                if (purity >= 1){
+                    //cout << "purity > 1 in bin xQ2: " << ix+1 << " and bin zPt: " << iz+1 << ". Purity = " << purity << endl;
+                    purity = 1.0;
+                }
+                if(iz < 5) {
+                    hist_efficiency_xQ2_zPt[ix]->SetBinContent(1, iz+1, eff);
+                    hist_purity_xQ2_zPt[ix]->SetBinContent(1, iz+1, purity);
+                } else if (iz < 10) {
+                    hist_efficiency_xQ2_zPt[ix]->SetBinContent(2, iz+1-5, eff);
+                    hist_purity_xQ2_zPt[ix]->SetBinContent(2, iz+1-5, purity);
+                } else if (iz < 15) {
+                    hist_efficiency_xQ2_zPt[ix]->SetBinContent(3, iz+1-10, eff);
+                    hist_purity_xQ2_zPt[ix]->SetBinContent(3, iz+1-10, purity);
+                } else if (iz < 20) {
+                    hist_efficiency_xQ2_zPt[ix]->SetBinContent(4, iz+1-15, eff);
+                    hist_purity_xQ2_zPt[ix]->SetBinContent(4, iz+1-15, purity);
+                } else if (iz < 25) {
+                    hist_efficiency_xQ2_zPt[ix]->SetBinContent(5, iz+1-20, eff);
+                    hist_purity_xQ2_zPt[ix]->SetBinContent(5, iz+1-20, purity);
+                } else if (iz < 30) {
+                    hist_efficiency_xQ2_zPt[ix]->SetBinContent(6, iz+1-25, eff);
+                    hist_purity_xQ2_zPt[ix]->SetBinContent(6, iz+1-25, purity);
                 }
             }
-            //
-            // Mom
-            pip_MomVsPhT.Fill(pionp_PhT, pionp_mom);
-            pip_MomVsEta.Fill(pionp_eta, pionp_mom);
-            pip_MomVsMx.Fill(pionp_mom, pionp_Mx);
-            pip_MomVsPhi_h.Fill(pionp_Phi_h, pionp_mom);
-            pip_MomVsTheta.Fill(pionp_mom, pionp_Theta);
-            pip_MomVsXb.Fill(pionp_xB, pionp_mom);
-            pip_MomVsXf.Fill(pionp_xF, pionp_mom);
-            pip_MomVsY.Fill(pionp_y, pionp_mom);
-            pip_MomVsZ.Fill(pionp_z, pionp_mom);
-            // Q2
-            pip_Q2VsEta.Fill(pionp_eta, pionp_Q2);
-            pip_Q2VsMom.Fill(pionp_mom, pionp_Q2);
-            pip_Q2VsPhi_h.Fill(pionp_Phi_h, pionp_Q2);
-            pip_Q2VsPhT.Fill(pionp_PhT, pionp_Q2);
-            pip_Q2VsXb.Fill(pionp_xB, pionp_Q2);
-            pip_Q2VsXf.Fill(pionp_xF, pionp_Q2);
-            pip_Q2VsY.Fill(pionp_y, pionp_Q2);
-            pip_Q2VsZ.Fill(pionp_z, pionp_Q2);
-            // PhT
-            pip_PhTvsEta.Fill(pionp_eta, pionp_PhT);
-            pip_PhTvsXb.Fill(pionp_xB, pionp_PhT);
-            pip_PhTvsZ.Fill(pionp_z, pionp_PhT);
-            pip_PhTvsPhi_h.Fill(pionp_Phi_h, pionp_PhT);
-            // z
-            pip_zVsEta.Fill(pionp_eta, pionp_z);
-            pip_zVsPhi_h.Fill(pionp_Phi_h, pionp_z);
-            pip_zVsXb.Fill(pionp_xB, pionp_z);
-            pip_zVsXf.Fill(pionp_xF, pionp_z);
-            //
-            pip_xBvsY.Fill(pionp_xB, pionp_y);
-            pip_ThetaVsPhi_h.Fill(pionp_Phi_h, pionp_Theta);
-            pip_ThetaVsPhi_Lab.Fill(pionp_Phi_lab, pionp_Theta);
-            treePionP.Fill();
-        }
-
-    }
-
-    treePionP.Write();
-    treePionP_MC.Write();
-
-    for (int ix = 0; ix < nBin_xQ2; ix++) {
-        for (int iz = 0; iz < nBin_zPt; iz++) {
-            double n = pip_efficiency_xQ2_zPt[ix][iz].size();
-            double n_mc = pip_efficiency_xQ2_zPt_mc[ix][iz].size();
-            double n2 = pip_efficiency_xQ2_zPt_2[ix][iz].size();
-            double n_all = pip_purity_xQ2_zPt_num[ix][iz].size();
-            double n_all_den = pip_purity_xQ2_zPt_den[ix][iz].size();
-            //double eff = (n > 0) ? 1.0 / sqrt(n) : 0.0;
-            double eff = (n > 0 || n2 > 0) ? n/n2 : 0.0;
-            double err = (n_mc > 0) ? sqrt(eff * (1.0 - eff) / n_mc) : 0.0;
-            double purity = (n > 0 || n_all > 0) ? n/n_all_den : 0.0;
-            //if(n < 300) eff = 0;
-            //hist_efficiency_xQ2_zPt[ix]->SetBinError(..., err);
-            if (eff >= 1){
-                cout << "eff > 1 in bin xQ2: " << ix+1 << " and bin zPt: " << iz+1 << ". Eff = " << eff << endl;
-                eff = 1.0;
-            }
-            if (purity >= 1){
-                //cout << "purity > 1 in bin xQ2: " << ix+1 << " and bin zPt: " << iz+1 << ". Purity = " << purity << endl;
-                purity = 1.0;
-            }
-            if(iz < 5) {
-                hist_efficiency_xQ2_zPt[ix]->SetBinContent(1, iz+1, eff);
-                hist_purity_xQ2_zPt[ix]->SetBinContent(1, iz+1, purity);
-            } else if (iz < 10) {
-                hist_efficiency_xQ2_zPt[ix]->SetBinContent(2, iz+1-5, eff);
-                hist_purity_xQ2_zPt[ix]->SetBinContent(2, iz+1-5, purity);
-            } else if (iz < 15) {
-                hist_efficiency_xQ2_zPt[ix]->SetBinContent(3, iz+1-10, eff);
-                hist_purity_xQ2_zPt[ix]->SetBinContent(3, iz+1-10, purity);
-            } else if (iz < 20) {
-                hist_efficiency_xQ2_zPt[ix]->SetBinContent(4, iz+1-15, eff);
-                hist_purity_xQ2_zPt[ix]->SetBinContent(4, iz+1-15, purity);
-            } else if (iz < 25) {
-                hist_efficiency_xQ2_zPt[ix]->SetBinContent(5, iz+1-20, eff);
-                hist_purity_xQ2_zPt[ix]->SetBinContent(5, iz+1-20, purity);
-            } else if (iz < 30) {
-                hist_efficiency_xQ2_zPt[ix]->SetBinContent(6, iz+1-25, eff);
-                hist_purity_xQ2_zPt[ix]->SetBinContent(6, iz+1-25, purity);
-            }
-        }
+        //}
     }
 
 
