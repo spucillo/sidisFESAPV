@@ -471,7 +471,7 @@ void relevant_plots(int target_pdg = 211, const char* inputDir = "25.10_10x100")
     }
     // empty plots for inlet
     TH2D* hist_efficiency_xQ2_zPt_inlet = new TH2D("hist_efficiency4D_inlet", "hist_efficiency4D_inlet; z; P_{hT} [GeV]", 6, bin_z_plot, 5, bin_Pt_plot);
-    TH2D* hist_purity_xQ2_zPt_inlet = new TH2D("hist_efficiency4D_inlet", "hist_efficiency4D_inlet; z; P_{hT} [GeV]", 6, bin_z_plot, 5, bin_Pt_plot);
+    TH2D* hist_purity_xQ2_zPt_inlet = new TH2D("hist_purity4D_inlet", "hist_purity4D_inlet; z; P_{hT} [GeV]", 6, bin_z_plot, 5, bin_Pt_plot);
     hist_efficiency_xQ2_zPt_inlet->SetStats(0);
     hist_purity_xQ2_zPt_inlet->SetStats(0);
 
