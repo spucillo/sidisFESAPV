@@ -66,8 +66,8 @@ void SetStatsBox2(TH2* hist) {
 //------------- Helper: binning functions in xB–Q2 and z–P_hT
 int getBinIndex_xQ2(double xB, double Q2){
     // bin_xB
-    //double bin_xB[][2] = {{1e-4, 1e-3}, {1e-3, 3e-3}, {3e-3, 1e-2}, {1e-2, 4e-2}, {4e-2, 1}}; // if 10x100
-    double bin_xB[][2] = {{5e-5, 3e-4}, {3e-4, 1e-3}, {1e-3, 3e-3}, {3e-3, 1e-2}, {1e-2, 1}}; // if 18x275
+    double bin_xB[][2] = {{1e-4, 1e-3}, {1e-3, 3e-3}, {3e-3, 1e-2}, {1e-2, 4e-2}, {4e-2, 1}}; // if 10x100
+    //double bin_xB[][2] = {{5e-5, 3e-4}, {3e-4, 1e-3}, {1e-3, 3e-3}, {3e-3, 1e-2}, {1e-2, 1}}; // if 18x275
     // bin Q2
     vector<vector<array<double,2>>> binning_Q2_for_xB = {
         {{1,2}, {2,100}},
@@ -154,7 +154,7 @@ int getBinIndex_Pt(double Pt){
 
 
 //------------- Main function
-void relevant_plots(int target_pdg = -211, const char* inputDir = "25.10_18x275") {
+void relevant_plots(int target_pdg = -321, const char* inputDir = "25.10_10x100") {
 
     //---set_ePIC_style();
     gROOT->ProcessLine("set_ePIC_style()");
@@ -427,12 +427,12 @@ void relevant_plots(int target_pdg = -211, const char* inputDir = "25.10_18x275"
     //--- Array 2D and 4D for efficiency and purity
     int nBin_xQ2 = 16;
     int nBin_zPt = 30;
-    // double bin_xB[][2] = {{1e-4, 1e-3}, {1e-3, 3e-3}, {3e-3, 1e-2}, {1e-2, 4e-2}, {4e-2, 1}}; // 10x100
-    double bin_xB[][2] = {{5e-5, 3e-4}, {3e-4, 1e-3}, {1e-3, 3e-3}, {3e-3, 1e-2}, {1e-2, 1}};
+    double bin_xB[][2] = {{1e-4, 1e-3}, {1e-3, 3e-3}, {3e-3, 1e-2}, {1e-2, 4e-2}, {4e-2, 1}}; // 10x100
+    //double bin_xB[][2] = {{5e-5, 3e-4}, {3e-4, 1e-3}, {1e-3, 3e-3}, {3e-3, 1e-2}, {1e-2, 1}}; // 18x275
     // bin_Q2
     double bin_Q2_full[][2] = {{1, 2}, {2, 5}, {5, 20}, {20, 1000}};
-    //double bin_xB_plot[] = {1e-4, 1e-3, 3e-3, 1e-2, 4e-2, 1}; // 10x100
-    double bin_xB_plot[] = {5e-5, 3e-4, 1e-3, 3e-3, 1e-2, 1};
+    double bin_xB_plot[] = {1e-4, 1e-3, 3e-3, 1e-2, 4e-2, 1}; // 10x100
+    //double bin_xB_plot[] = {5e-5, 3e-4, 1e-3, 3e-3, 1e-2, 1}; // 18x275
     double bin_Q2_plot[] = {1, 2, 5, 20, 1000};
     // bin_z
     double bin_z[][2] = {{0, 0.1}, {0.1, 0.2}, {0.2, 0.3}, {0.3, 0.5}, {0.5, 0.7}, {0.7, 1}};
@@ -927,10 +927,13 @@ void relevant_plots(int target_pdg = -211, const char* inputDir = "25.10_18x275"
 
         double pos = x_ndc_min + norm * (x_ndc_max - x_ndc_min);
         double dx = 0;
-        if (i == -4) dx = +0.1;
-        if (i == -3) dx = -0.095;
-        if (i == -2) dx = 0.03;
-        if (i == -1) dx = -0.03;
+        //if (i == -4) dx = +0.1; // only for 18x275
+        //if (i == -3) dx = -0.095; // 18x275
+        if (i == -3) dx = -0.27;
+        //if (i == -2) dx = 0.03;
+        if (i == -2) dx = - 0.145;
+        //if (i == -1) dx = -0.03;
+        if (i == -1) dx = -0.08;
         if (i == 0) dx = -0.02;
         pos += dx;
 
