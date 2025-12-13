@@ -463,12 +463,17 @@ void relevant_plots(int target_pdg = 211, const char* inputDir = "25.10_10x100")
     vector<vector<vector<double>>> had_purity_xQ2_zPt_den(nBin_xQ2, vector<vector<double>> (nBin_zPt));
 
     // --- relative plots
-    vector<TH2D*> hist_efficiency_xQ2_zPt(nBin_xQ2);
-    vector<TH2D*> hist_purity_xQ2_zPt(nBin_xQ2);
+    vector<TH2D*> hist_efficiency_xQ2_zPt(nBin_xQ2+1);
+    vector<TH2D*> hist_purity_xQ2_zPt(nBin_xQ2+1);
     for (int ix = 0; ix < nBin_xQ2; ix++){
       hist_efficiency_xQ2_zPt[ix] = new TH2D(Form("hist_efficiency4D_xQ2_%d", ix+1), Form("%s efficiency as P_{hT} vs z for bin (%d, x_{B}-Q^{2}); z; P_{hT} [GeV]", label.Data(), ix+1), 6, bin_z_plot, 5, bin_Pt_plot);
       hist_purity_xQ2_zPt[ix] = new TH2D(Form("hist_purity4D_xQ2_%d", ix+1),Form("%s purity as P_{hT} vs z for bin (%d, x_{B}-Q^{2}); z; P_{hT} [GeV]", label.Data(), ix+1), 6, bin_z_plot, 5, bin_Pt_plot);
     }
+    // empty plots for inlet
+    TH2D* hist_efficiency_xQ2_zPt_inlet = new TH2D("hist_efficiency4D_inlet", "hist_efficiency4D_inlet; z; P_{hT} [GeV]", 6, bin_z_plot, 5, bin_Pt_plot);
+    TH2D* hist_purity_xQ2_zPt_inlet = new TH2D("hist_efficiency4D_inlet", "hist_efficiency4D_inlet; z; P_{hT} [GeV]", 6, bin_z_plot, 5, bin_Pt_plot);
+    hist_efficiency_xQ2_zPt_inlet->SetStats(0);
+    hist_purity_xQ2_zPt_inlet->SetStats(0);
 
     // --- Filling of the graphs
     // Hadron of interest
@@ -861,7 +866,7 @@ void relevant_plots(int target_pdg = 211, const char* inputDir = "25.10_10x100")
     const int nCols = 5;
     int layout[nRows][nCols] = {
         { 0,  0,  9, 13, 16},
-        { 0,  5,  8, 12, 15},
+        { 999,  5,  8, 12, 15},
         { 2,  4,  7, 11, 14},
         { 1,  3,  6, 10,  0}
     };
@@ -1034,6 +1039,7 @@ void relevant_plots(int target_pdg = 211, const char* inputDir = "25.10_10x100")
             int idx = layout[iRow][iCol]; // idx is the bin index
             if (idx == 0) continue;
 
+	   
             // normalized coordinates: (x1,y1) bottom-left, (x2,y2) top-right
             double x1 = xMargin + iCol * padW;
             double x2 = x1 + padW;
@@ -1043,20 +1049,32 @@ void relevant_plots(int target_pdg = 211, const char* inputDir = "25.10_10x100")
 
             // pìonly 1 pad
             TString padName = Form("%s_pad_r%d_c%d", tag.Data(), iRow, iCol);
+	    if (idx == 999) padName = Form("%s_inlet", tag.Data());
+	    
             c_layout->cd();
 
+      	    
             TPad *pad = new TPad(padName, padName, x1, y1, x2, y2);
-            pad->SetRightMargin(0.0);
-            pad->SetLeftMargin(0.0);
-            pad->SetBottomMargin(0.0);
+            pad->SetRightMargin(idx == 999 ? 0.05 : 0.0);
+            pad->SetLeftMargin(idx == 999 ? 0.12 : 0.0);
+            pad->SetBottomMargin(idx == 999 ? 0.12 : 0.0);
             pad->SetTopMargin(0.0);
             pad->Draw();
             pad->cd();
 
+	
+
             // Histogram draw (no colorbar)
-            hist_efficiency_xQ2_zPt[idx - 1]->SetTitle("");
-            hist_efficiency_xQ2_zPt[idx - 1]->Draw("col"); // idx-1 because 0-based vector
-            for (auto &rect : grid_zp) rect->DrawClone("same");
+	    if (idx != 999){
+	      hist_efficiency_xQ2_zPt[idx - 1]->SetTitle("");
+	      hist_efficiency_xQ2_zPt[idx - 1]->Draw("col"); // idx-1 because 0-based vector
+	    }
+	    else{
+	      hist_efficiency_xQ2_zPt_inlet->SetTitle("");
+	      hist_efficiency_xQ2_zPt_inlet->Draw("");
+	    }
+	      for (auto &rect : grid_zp) rect->DrawClone("same");
+	   
             // Come back to the canvas, before moving to the next pad
             c_layout->cd();
         }
@@ -1224,6 +1242,7 @@ void relevant_plots(int target_pdg = 211, const char* inputDir = "25.10_10x100")
             grid_zp.push_back(rect);
         }
     }
+
     // Loop and creation of the pads
     for (int iRow = 0; iRow < nRows; ++iRow) {
         for (int iCol = 0; iCol < nCols; ++iCol) {
@@ -1239,24 +1258,33 @@ void relevant_plots(int target_pdg = 211, const char* inputDir = "25.10_10x100")
 
             // only 1 pad
             TString padName = Form("%s_pad_r%d_c%d", tag.Data(), iRow, iCol);
+	    if (idx == 999) padName = Form("%s_inlet", tag.Data());
             c_layout_all->cd();
 
             TPad *pad = new TPad(padName, padName, x1, y1, x2, y2);
-            pad->SetRightMargin(0.0);
-            pad->SetLeftMargin(0.0);
-            pad->SetBottomMargin(0.0);
+            pad->SetRightMargin(idx == 999 ? 0.05 : 0.0);
+            pad->SetLeftMargin(idx == 999 ? 0.12 : 0.0);
+            pad->SetBottomMargin(idx == 999 ? 0.12 : 0.0);
             pad->SetTopMargin(0.0);
             pad->Draw();
             pad->cd();
 
             // Histogram draw (mo colorbar)
-            hist_purity_xQ2_zPt[idx - 1]->SetTitle("");
-            hist_purity_xQ2_zPt[idx - 1]->Draw("col"); // idx-1 perché vettore 0-based
+	    if (idx != 999){
+	      hist_purity_xQ2_zPt[idx - 1]->SetTitle("");
+	      hist_purity_xQ2_zPt[idx - 1]->Draw("col"); // idx-1 perché vettore 0-based
+	    }
+	    else{
+	      hist_purity_xQ2_zPt_inlet->SetTitle("");
+	      hist_purity_xQ2_zPt_inlet->Draw("");
+	    }
+	      
             for (auto &rect : grid_zp) rect->DrawClone("same");
             // Come back to the canvas, before moving to the next pad
             c_layout_all->cd();
         }
     }
+
     c_layout_all->Modified();
 
     TPad *pad_palette_all = new TPad(Form("%s_pad_palette_all",tag.Data()), "", 0.94, 0.1, 1, 0.9);
