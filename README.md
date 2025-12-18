@@ -40,3 +40,8 @@ To run it locally:
 4. Create a dedicated folder for the campaign, Q2 and energy of interest.
 5. Move the output file produced by epic_studies.cpp into this folder.
 6. Run the relevant_plots.cpp macro for each particle of interest to produce the plots (saved in a .root output file).
+
+# Useful information
+
+### MC cross sections
+Pythia8 DIS NC cross sections available [here](https://docs.google.com/spreadsheets/d/1yCUZFJjMbE-Ly73juGKYvsA-VufUplaDMWs4Uv7PqAk/edit?usp=sharing). (from Ralf who got them from Tyler)
